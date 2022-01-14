@@ -28,7 +28,7 @@ data "azurerm_client_config" "current" {}
 
 # Create a resource group
 resource "azurerm_resource_group" "NBOS_AZ_RG" {
-  name     = "NBOS_AZ_RG${var.az_prefix}"
+  name     = "NBOS_AZ_RG${var.az_suffix}" #to do, remove suffix after recreate
   location = "eastus2"
 }
 
@@ -58,16 +58,45 @@ resource "azurerm_key_vault" "AZ_KV" {
 }
 # Create a virtual network within the resource group
 resource "azurerm_virtual_network" "NBOS_AZ_VN" {
-  name                = "NBOS-VN-network${var.az_prefix}"
+  name                = "NBOS-VN-network${var.az_suffix}" #to do, remove suffix after recreate
   resource_group_name = azurerm_resource_group.NBOS_AZ_RG.name
   location            = azurerm_resource_group.NBOS_AZ_RG.location
   address_space       = ["10.0.0.0/16"]
 
 
   subnet {
-    name           = "subnet1"
-    address_prefix = "10.0.1.0/24"
+    #Subnet connected to: CosmosDB
+    name                = "subnet1"
+    address_prefix      = "10.0.1.0/24"
+
   }
+
+  subnet {
+        #Subnet connected to:SqlServer/DB/SA
+    name                = "subnet2"
+    address_prefix      = "10.0.2.0/24"
+  }
+
+  subnet {
+        #Subnet connected to:App-Service
+    name                = "subnet3"
+    address_prefix      = "10.0.3.0/24"
+  }
+
+  subnet {
+        #Subnet connected to:Function App
+    name                = "subnet4"
+    address_prefix      = "10.0.4.0/24"
+  }
+
+  /*
+  for NBOS_AZ_RG_jss{
+       zipmap(Subnets["name", "address_prefix"], ["subnet$(var.subnet_count)", "10.0.$(var.subnet_count).0/24"])
+        {
+          
+        }
+  }
+  */
 
   tags = {
     environment = "dev"
