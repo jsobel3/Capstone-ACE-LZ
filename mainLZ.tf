@@ -28,7 +28,7 @@ data "azurerm_client_config" "current" {}
 
 # Create a resource group
 resource "azurerm_resource_group" "NBOS_AZ_RG" {
-  name     = "NBOS_AZ_RG${var.az_suffix}" #to do, remove suffix after recreate
+  name     = "NBOS_AZ_RG${var.az_suffix}"
   location = "eastus2"
 }
 
@@ -58,48 +58,30 @@ resource "azurerm_key_vault" "AZ_KV" {
 }
 # Create a virtual network within the resource group
 resource "azurerm_virtual_network" "NBOS_AZ_VN" {
-  name                = "NBOS-VN-network${var.az_suffix}" #to do, remove suffix after recreate
+  name                = "NBOS-VN-network${var.az_suffix}"
   resource_group_name = azurerm_resource_group.NBOS_AZ_RG.name
   location            = azurerm_resource_group.NBOS_AZ_RG.location
-  address_space       = ["10.0.0.0/16"]
+  address_space       = [var.vnet_cidr]
+}
 
+resource "azurerm_subnet" "nbos_az_subnet" {
+  for_each             = var.subnet_list
+  name                 = each.value
+  resource_group_name  = azurerm_resource_group.NBOS_AZ_RG.name
+  virtual_network_name = azurerm_virtual_network.NBOS_AZ_VN.name
+  address_prefix       = cidrsubnet(var.vnet_cidr, 8, index(tolist(var.subnet_list), each.value) + 1)
+}
+#another way to loop create subnets
 
-  subnet {
-    #Subnet connected to: CosmosDB
-    name                = "subnet1"
-    address_prefix      = "10.0.1.0/24"
+# resource "azurerm_subnet" "nbos_az_subnet" {
+#     count = 4
+#     resource_group_name = azurerm_resource_group.NBOS_AZ_RG.name
+#     virtual_network_name = azurerm_virtual_network.NBOS_AZ_VN.name
+#     address_prefix = cidrsubnet(var.vnet_cidr, 8, count.index)
+#    name           = "subnet${count.index + 1}"
+#   }
 
-  }
-
-  subnet {
-        #Subnet connected to:SqlServer/DB/SA
-    name                = "subnet2"
-    address_prefix      = "10.0.2.0/24"
-  }
-
-  subnet {
-        #Subnet connected to:App-Service
-    name                = "subnet3"
-    address_prefix      = "10.0.3.0/24"
-  }
-
-  subnet {
-        #Subnet connected to:Function App
-    name                = "subnet4"
-    address_prefix      = "10.0.4.0/24"
-  }
-
-  /*
-  for NBOS_AZ_RG_jss{
-       zipmap(Subnets["name", "address_prefix"], ["subnet$(var.subnet_count)", "10.0.$(var.subnet_count).0/24"])
-        {
-          
-        }
-  }
-  */
-
-  tags = {
+/*tags = {
     environment = "dev"
     costcenter  = "it"
-  }
-}
+  }*/

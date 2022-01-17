@@ -25,10 +25,13 @@ variable "az_tenant_id" {
   default = "6c637512-c417-4e78-9d62-b61258e4b619"
 }
 
-variable "subnet_count" {
-  type = integer
-  default = 1
-  description = "variable to set a count for loop for subnets"
+variable "vnet_cidr" {
+  default     = "10.0.0.0/16"
+  description = "variable to set a cidr for loop for networks"
+}
+variable "subnet_list" {
+  type    = set(string)
+  default = ["subnet1", "subnet2", "subnet3", "subnet4"]
 }
 
 /*variable "subnet_numbers" {
