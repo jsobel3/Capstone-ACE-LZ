@@ -64,12 +64,29 @@ resource "azurerm_virtual_network" "NBOS_AZ_VN" {
   address_space       = [var.vnet_cidr]
 }
 
+locals {
+  svcEndpoints = {
+    subnet1 = [ "Microsoft.AzureActiveDirectory", "Microsoft.AzureCosmosDB", "Microsoft.ContainerRegistry", "Microsoft.EventHub", "Microsoft.KeyVault", "Microsoft.ServiceBus", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
+    subnet2 = [ "Microsoft.AzureActiveDirectory", "Microsoft.AzureCosmosDB", "Microsoft.ContainerRegistry", "Microsoft.EventHub", "Microsoft.KeyVault", "Microsoft.ServiceBus", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
+    subnet3 = [ "Microsoft.AzureActiveDirectory" ]
+    subnet4 = [ "Microsoft.ContainerRegistry", "Microsoft.KeyVault", "Microsoft.ServiceBus", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
+  }
+}
+
 resource "azurerm_subnet" "nbos_az_subnet" {
   for_each             = var.subnet_list
   name                 = each.value
   resource_group_name  = azurerm_resource_group.NBOS_AZ_RG.name
   virtual_network_name = azurerm_virtual_network.NBOS_AZ_VN.name
   address_prefix       = cidrsubnet(var.vnet_cidr, 8, index(tolist(var.subnet_list), each.value) + 1)
+  service_endpoints = local.svcEndpoints[each.value]
+  delegation {
+    name = "serverFarms"
+
+    service_delegation {
+      name    = "Microsoft.Web/serverFarms"
+    }
+  }
 }
 #another way to loop create subnets
 
