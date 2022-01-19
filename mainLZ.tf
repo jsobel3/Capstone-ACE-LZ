@@ -80,8 +80,3 @@ resource "azurerm_subnet" "nbos_az_subnet" {
 #     address_prefix = cidrsubnet(var.vnet_cidr, 8, count.index)
 #    name           = "subnet${count.index + 1}"
 #   }
-
-/*tags = {
-    environment = "dev"
-    costcenter  = "it"
-  }*/
